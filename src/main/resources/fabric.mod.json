@@ -5,6 +5,7 @@
   "name": "Silvera Client",
   "description": "Cosmetic + HUD + animation client",
   "authors": ["YourName"],
+
   "environment": "client",
 
   "entrypoints": {
@@ -18,7 +19,7 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.15.0",
+    "fabricloader": ">=0.15.11",
     "fabric-api": "*",
     "minecraft": "1.21.1",
     "java": ">=21"
