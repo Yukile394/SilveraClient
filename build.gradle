@@ -14,11 +14,11 @@ repositories {
     mavenCentral()
 
     maven {
-        url = "https://jitpack.io"
+        url = "https://maven.fabricmc.net/"
     }
 
     maven {
-        url = "https://maven.fabricmc.net/"
+        url = "https://maven.ladysnake.org/releases"
     }
 }
 
@@ -29,9 +29,9 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // ModifyReturnValue için gerekli
-    implementation annotationProcessor("com.github.LlamaLad7:MixinExtras:0.3.5")
-    include "com.github.LlamaLad7:MixinExtras:0.3.5"
+    // MixinExtras (ModifyReturnValue için)
+    modImplementation "io.github.llamalad7:mixinextras-fabric:0.4.1"
+    include "io.github.llamalad7:mixinextras-fabric:0.4.1"
 }
 
 processResources {
@@ -58,5 +58,13 @@ java {
 jar {
     from("LICENSE") {
         rename { "${it}_${project.archives_base_name}" }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
     }
 }
