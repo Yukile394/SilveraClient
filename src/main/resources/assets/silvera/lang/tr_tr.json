@@ -1,0 +1,24 @@
+{
+  "key.silvera.openmenu": "Silvera Menü",
+  "key.categories.silvera": "Silvera Client",
+
+  "silvera.menu.title": "Silvera Client",
+  "silvera.menu.subtitle": "v1.0.0",
+
+  "silvera.module.footstep_particles": "Footstep Particles",
+  "silvera.module.trail_particles": "Trail Particles",
+  "silvera.module.ambient_particles": "Ambient Particles",
+  "silvera.module.hit_particles": "Hit Particles",
+  "silvera.module.elytra_trail": "Elytra Trail",
+  "silvera.module.hud": "HUD",
+  "silvera.module.coordinates": "Koordinatlar",
+  "silvera.module.fps_counter": "FPS Sayacı",
+  "silvera.module.biome_display": "Biome Göstergesi",
+  "silvera.module.direction_hud": "Yön HUD",
+  "silvera.module.armor_hud": "Zırh HUD",
+  "silvera.module.potion_hud": "Efekt HUD",
+  "silvera.module.motion_blur": "Motion Blur",
+  "silvera.module.zoom": "Zoom",
+  "silvera.module.cape_animation": "Cape Animasyonu",
+  "silvera.module.hit_color": "Hit Rengi"
+}
