@@ -3,16 +3,14 @@
   "id": "silvera",
   "version": "${version}",
   "name": "Silvera Client",
-  "description": "Cosmetic client with animations, particles and HUD.",
-  "authors": ["Yukile"],
-  "contact": {
-    "sources": "https://github.com/Yukile394/SilveraClient"
-  },
-  "license": "MIT",
+  "description": "Cosmetic + HUD + animation client",
+  "authors": ["YourName"],
   "environment": "client",
 
   "entrypoints": {
-    "client": ["com.silvera.client.SilveraClient"]
+    "client": [
+      "com.silvera.client.SilveraClient"
+    ]
   },
 
   "mixins": [
@@ -20,8 +18,9 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.16.0",
-    "minecraft": "1.21.x",
-    "fabric-api": "*"
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": "1.21.1",
+    "java": ">=21"
   }
 }
