@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id 'fabric-loom' version '1.6-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -12,9 +12,7 @@ base {
 
 repositories {
     mavenCentral()
-    maven {
-        url = "https://maven.fabricmc.net/"
-    }
+    maven { url = "https://maven.fabricmc.net/" }
 }
 
 dependencies {
@@ -24,41 +22,16 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // MixinExtras (resmi Fabric kurulumu)
-    include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.5.4")))
+    // MixinExtras (SAFE)
+    modImplementation "io.github.llamalad7:mixinextras-fabric:0.4.1"
+    include "io.github.llamalad7:mixinextras-fabric:0.4.1"
 }
-
-processResources {
-    inputs.property "version", project.version
-    filteringCharset "UTF-8"
-
-    filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
-}
-
-def targetJavaVersion = 21
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
-    options.release = targetJavaVersion
+    options.release = 17
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
-    withSourcesJar()
-}
-
-jar {
-    from("LICENSE") {
-        rename { "${it}_${project.archives_base_name}" }
-    }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
 }
