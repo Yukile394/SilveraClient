@@ -2,7 +2,8 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.silvera.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_17",
+
   "client": [
     "GameRendererMixin",
     "InGameHudMixin",
@@ -10,5 +11,8 @@
     "PlayerEntityRendererMixin",
     "WorldRendererMixin"
   ],
-  "injectors": { "defaultRequire": 1 }
+
+  "injectors": {
+    "defaultRequire": 1
+  }
 }
