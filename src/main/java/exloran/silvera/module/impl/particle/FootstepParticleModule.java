@@ -6,7 +6,7 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.Vec3d;
 
 /**
- * Footstep Particles — oyuncu yürürken ayak izleri bırakır.
+ * Footstep Particles — oyuncu yürürken ayak izi partikülleri
  */
 public class FootstepParticleModule extends Module {
 
@@ -20,31 +20,46 @@ public class FootstepParticleModule extends Module {
     @Override
     public void onTick() {
         MinecraftClient mc = MinecraftClient.getInstance();
+
         if (mc.player == null || mc.world == null) return;
-        if (mc.player.isFlying() || mc.player.isFallFlying()) return;
+
+        // ❌ isFlying() yok 1.21
+        // ✅ doğru kullanım
+        if (mc.player.getAbilities().flying || mc.player.isFallFlying()) return;
+
         if (!mc.player.isOnGround()) return;
 
         tickCounter++;
-        if (tickCounter < 4) return; // Her 4 tikte bir
+        if (tickCounter < 4) return; // her 4 tick
         tickCounter = 0;
 
         Vec3d pos = mc.player.getPos();
-        if (lastPos != null && pos.distanceTo(lastPos) < 0.1) return; // Duruyorsa spawn etme
+
+        if (lastPos != null && pos.distanceTo(lastPos) < 0.1) return;
         lastPos = pos;
 
         double x = pos.x;
         double y = pos.y;
         double z = pos.z;
 
-        // İki ayak pozisyonu (sol/sağ)
-        double side = (tickCounter / 4 % 2 == 0) ? 0.2 : -0.2;
-        Vec3d right = mc.player.getRotationVec(1.0f).rotateY((float) Math.toRadians(90));
+        // doğru sağ/sol ayak hesabı
+        Vec3d right = mc.player.getRotationVec(1.0f)
+                .rotateY((float) Math.toRadians(90));
 
-        mc.world.addParticle(ParticleTypes.END_ROD,
+        boolean leftStep = (System.currentTimeMillis() / 200) % 2 == 0;
+
+        double side = leftStep ? 0.2 : -0.2;
+
+        mc.world.addParticle(
+                ParticleTypes.END_ROD,
                 x + right.x * side, y + 0.05, z + right.z * side,
-                0, 0.02, 0);
-        mc.world.addParticle(ParticleTypes.WITCH,
+                0, 0.02, 0
+        );
+
+        mc.world.addParticle(
+                ParticleTypes.WITCH,
                 x + right.x * side, y + 0.05, z + right.z * side,
-                0, 0.01, 0);
+                0, 0.01, 0
+        );
     }
 }
