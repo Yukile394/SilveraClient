@@ -6,7 +6,7 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.util.math.Vec3d;
 
 /**
- * Footstep Particles — oyuncu yürürken ayak izi partikülleri
+ * Footstep Particles — SAFE VERSION (Pojav + 1.21 compatible)
  */
 public class FootstepParticleModule extends Module {
 
@@ -21,16 +21,19 @@ public class FootstepParticleModule extends Module {
     public void onTick() {
         MinecraftClient mc = MinecraftClient.getInstance();
 
-        if (mc.player == null || mc.world == null) return;
+        // 🔥 SAFE GUARDS (CRASH FIX)
+        if (mc == null) return;
+        if (mc.player == null) return;
+        if (mc.world == null) return;
+        if (mc.getNetworkHandler() == null) return;
 
-        // ❌ isFlying() yok 1.21
-        // ✅ doğru kullanım
+        // ❌ 1.21 fix (isFlying removed)
         if (mc.player.getAbilities().flying || mc.player.isFallFlying()) return;
 
         if (!mc.player.isOnGround()) return;
 
         tickCounter++;
-        if (tickCounter < 4) return; // her 4 tick
+        if (tickCounter < 4) return;
         tickCounter = 0;
 
         Vec3d pos = mc.player.getPos();
@@ -38,27 +41,25 @@ public class FootstepParticleModule extends Module {
         if (lastPos != null && pos.distanceTo(lastPos) < 0.1) return;
         lastPos = pos;
 
-        double x = pos.x;
-        double y = pos.y;
-        double z = pos.z;
-
-        // doğru sağ/sol ayak hesabı
         Vec3d right = mc.player.getRotationVec(1.0f)
                 .rotateY((float) Math.toRadians(90));
 
         boolean leftStep = (System.currentTimeMillis() / 200) % 2 == 0;
-
         double side = leftStep ? 0.2 : -0.2;
 
         mc.world.addParticle(
                 ParticleTypes.END_ROD,
-                x + right.x * side, y + 0.05, z + right.z * side,
+                pos.x + right.x * side,
+                pos.y + 0.05,
+                pos.z + right.z * side,
                 0, 0.02, 0
         );
 
         mc.world.addParticle(
                 ParticleTypes.WITCH,
-                x + right.x * side, y + 0.05, z + right.z * side,
+                pos.x + right.x * side,
+                pos.y + 0.05,
+                pos.z + right.z * side,
                 0, 0.01, 0
         );
     }
