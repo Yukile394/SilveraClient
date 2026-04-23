@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "silvera",
+  "version": "${version}",
+  "name": "Silvera Client",
+  "description": "A cosmetic client with animations, particles, HUD and a beautiful mod menu.",
+  "authors": ["YourName"],
+  "contact": {
+    "sources": "https://github.com/YourName/SilveraClient"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.silvera.client.SilveraClient"]
+  },
+  "mixins": ["silvera.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21"
+  }
+}

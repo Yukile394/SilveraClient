@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.silvera.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "GameRendererMixin",
+    "InGameHudMixin",
+    "LivingEntityRendererMixin",
+    "PlayerEntityRendererMixin",
+    "WorldRendererMixin"
+  ],
+  "injectors": { "defaultRequire": 1 }
+}
