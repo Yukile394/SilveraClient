@@ -3,6 +3,7 @@ package com.silvera.client.hud;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.util.math.MatrixStack;
 
 public class HudRenderer {
 
@@ -13,6 +14,8 @@ public class HudRenderer {
             MinecraftClient client = MinecraftClient.getInstance();
 
             if (client.player == null) return;
+
+            int fps = client.getCurrentFps(); // ✅ DOĞRU YER
 
             context.drawText(
                     client.textRenderer,
@@ -25,9 +28,9 @@ public class HudRenderer {
 
             context.drawText(
                     client.textRenderer,
-                    "FPS: " + MinecraftClient.getCurrentFps(),
+                    "FPS: " + fps,
                     10,
-                    20,
+                    22,
                     0xFFFFFF,
                     true
             );
