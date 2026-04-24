@@ -1,11 +1,10 @@
 {
   "schemaVersion": 1,
   "id": "silvera",
-  "version": "${version}",
+  "version": "1.0.0",
   "name": "Silvera Client",
   "description": "Cosmetic + HUD + animation client",
-  "authors": ["YourName"],
-
+  "authors": ["Yukile"],
   "environment": "client",
 
   "entrypoints": {
@@ -19,9 +18,9 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.15.11",
+    "fabricloader": ">=0.15.0",
     "fabric-api": "*",
-    "minecraft": "1.21.1",
+    "minecraft": "1.21",
     "java": ">=21"
   }
 }
