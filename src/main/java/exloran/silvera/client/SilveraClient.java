@@ -1,8 +1,8 @@
-package com.silvera.client;
+package exloran.silvera.client;
 
 import net.fabricmc.api.ClientModInitializer;
-import com.silvera.client.hud.HudRenderer;
-import com.silvera.client.key.Keybinds;
+import exloran.silvera.hud.HudRenderer;
+import exloran.silvera.client.key.Keybinds;
 
 public class SilveraClient implements ClientModInitializer {
 
