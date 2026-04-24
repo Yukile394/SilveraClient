@@ -2,12 +2,9 @@ package com.silvera.client.effect;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.SpriteBillboardParticle;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.util.math.Vec3d;
-
+import org.joml.Vector3f;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -18,12 +15,10 @@ public class TrailEffect {
     private static final List<TrailParticle> trails = new ArrayList<>();
     private static final Random random = new Random();
 
-    // Oyuncu her tick'te bu metodu çağırır
     public static void spawnTrail(ClientPlayerEntity player) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.world == null) return;
 
-        // Sadece hareket ediyorken trail spawn et
         Vec3d vel = player.getVelocity();
         double speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
         if (speed < 0.05) return;
@@ -34,12 +29,9 @@ public class TrailEffect {
 
         trails.add(new TrailParticle(x, y, z));
 
-        // Minecraft'ın kendi partikül sistemine de ekle (3D dünya efekti)
-        mc.world.addParticle(
-            ParticleTypes.DUST,
-            x, y + 0.1, z,
-            0.0, 0.05, 0.0
-        );
+        Vector3f color = new Vector3f(1.0f, 0.1f, 0.1f);
+        DustParticleEffect dust = new DustParticleEffect(color, 1.2f);
+        mc.world.addParticle(dust, x, y + 0.1, z, 0.0, 0.05, 0.0);
     }
 
     public static void tick() {
@@ -55,7 +47,6 @@ public class TrailEffect {
         return trails;
     }
 
-    // Trail partikülleri (2D HUD'da değil, 3D world'de render için veri tutar)
     public static class TrailParticle {
         public double x, y, z;
         public int life;
@@ -65,7 +56,7 @@ public class TrailEffect {
             this.x = x;
             this.y = y;
             this.z = z;
-            this.maxLife = 15 + new Random().nextInt(10);
+            this.maxLife = 15 + random.nextInt(10);
             this.life = maxLife;
         }
 
