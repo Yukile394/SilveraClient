@@ -7,7 +7,6 @@ import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Frustum;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,8 +18,6 @@ import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.gl.ShaderProgram;
-import net.minecraft.client.gl.ShaderProgramKeys;
 
 @Mixin(WorldRenderer.class)
 public class WorldRenderMixin {
@@ -49,7 +46,7 @@ public class WorldRenderMixin {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableDepthTest();
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 
         Tessellator tessellator = Tessellator.getInstance();
 
@@ -60,24 +57,22 @@ public class WorldRenderMixin {
                 VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR
             );
             float s = 0.15f;
-            float r = 1.0f, g = 0.1f, b = 0.1f;
             buffer.vertex(matrices.peek().getPositionMatrix(),
                 (float)(trail.x - s), (float)trail.y, (float)(trail.z - s))
-                .color(r, g, b, alpha * 0.8f);
+                .color(1.0f, 0.1f, 0.1f, alpha * 0.8f);
             buffer.vertex(matrices.peek().getPositionMatrix(),
                 (float)(trail.x + s), (float)trail.y, (float)(trail.z - s))
-                .color(r, g, b, alpha * 0.8f);
+                .color(1.0f, 0.1f, 0.1f, alpha * 0.8f);
             buffer.vertex(matrices.peek().getPositionMatrix(),
                 (float)(trail.x + s), (float)trail.y, (float)(trail.z + s))
-                .color(r, g, b, alpha * 0.4f);
+                .color(1.0f, 0.1f, 0.1f, alpha * 0.4f);
             buffer.vertex(matrices.peek().getPositionMatrix(),
                 (float)(trail.x - s), (float)trail.y, (float)(trail.z + s))
-                .color(r, g, b, alpha * 0.4f);
-            BufferBuilder.BuiltBuffer built = buffer.end();
-            net.minecraft.client.render.BufferRenderer.drawWithGlobalProgram(built);
+                .color(1.0f, 0.1f, 0.1f, alpha * 0.4f);
+            net.minecraft.client.render.BufferRenderer.drawWithGlobalProgram(buffer.end());
         }
 
-        // Hit dairesi render (yatay daire, XZ düzleminde)
+        // Hit dairesi render
         for (HitEffect.HitCircle circle : HitEffect.circles) {
             float alpha = circle.getAlpha();
             float radius = circle.radius;
@@ -96,8 +91,7 @@ public class WorldRenderMixin {
                     .color(1.0f, 0.15f, 0.15f, alpha);
             }
 
-            BufferBuilder.BuiltBuffer built = buffer.end();
-            net.minecraft.client.render.BufferRenderer.drawWithGlobalProgram(built);
+            net.minecraft.client.render.BufferRenderer.drawWithGlobalProgram(buffer.end());
         }
 
         RenderSystem.enableDepthTest();
