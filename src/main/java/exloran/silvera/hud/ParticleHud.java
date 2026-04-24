@@ -1,7 +1,7 @@
-package com.silvera.client.hud;
+package exloran.silvera.hud;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +10,7 @@ public class ParticleHud {
     private static final List<Particle> particles = new ArrayList<>();
 
     public static void tick() {
-        particles.add(new Particle(Math.random() * 100, Math.random() * 100));
+        particles.add(new Particle(Math.random() * 200, Math.random() * 200));
         particles.removeIf(p -> p.life <= 0);
 
         for (Particle p : particles) {
@@ -34,13 +34,13 @@ public class ParticleHud {
         }
 
         void update() {
-            y += 0.3;
+            y += 0.4;
             life--;
         }
 
         void draw(DrawContext context) {
             context.drawText(
-                net.minecraft.client.MinecraftClient.getInstance().textRenderer,
+                MinecraftClient.getInstance().textRenderer,
                 "•",
                 (int) x,
                 (int) y,
