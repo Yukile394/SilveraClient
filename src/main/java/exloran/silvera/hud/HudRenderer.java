@@ -2,10 +2,13 @@ package com.silvera.client.hud;
 
 import com.silvera.client.config.SilveraConfig;
 import com.silvera.client.key.Keybinds;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.*;
+import org.joml.Matrix4f;
 
 public class HudRenderer {
 
@@ -16,9 +19,8 @@ public class HudRenderer {
     public static void onLeftClick() { clickBuffer++; }
 
     private static void handleKeybinds() {
-        if (Keybinds.toggleHud.wasPressed()) {
+        if (Keybinds.toggleHud.wasPressed())
             SilveraConfig.hudEnabled = !SilveraConfig.hudEnabled;
-        }
     }
 
     public static void register() {
@@ -29,7 +31,6 @@ public class HudRenderer {
             MinecraftClient mc = MinecraftClient.getInstance();
             if (mc.player == null || mc.world == null) return;
 
-            // Particle HUD (2D ekran partikülleri — kalpler silindi)
             ParticleHud.tick();
             ParticleHud.render(drawContext);
 
@@ -51,30 +52,145 @@ public class HudRenderer {
         }
     }
 
+    // ── Yardımcı: gradient panel (sol kırmızı → siyah) ─────────────────────
+    private static void drawGradientPanel(DrawContext ctx, int x, int y, int w, int h) {
+        Matrix4f matrix = ctx.getMatrices().peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+        Tessellator tess = Tessellator.getInstance();
+        BufferBuilder buf = tess.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+
+        // Sol taraf: kırmızı tint
+        buf.vertex(matrix, x,     y,     0).color(0.6f, 0.0f, 0.0f, 0.75f);
+        buf.vertex(matrix, x,     y + h, 0).color(0.6f, 0.0f, 0.0f, 0.75f);
+        // Sağ taraf: siyah
+        buf.vertex(matrix, x + w, y + h, 0).color(0.0f, 0.0f, 0.0f, 0.75f);
+        buf.vertex(matrix, x + w, y,     0).color(0.0f, 0.0f, 0.0f, 0.75f);
+
+        BufferRenderer.drawWithGlobalProgram(buf.end());
+        RenderSystem.disableBlend();
+    }
+
+    // ── Sol kırmızı çizgi ───────────────────────────────────────────────────
+    private static void drawRedAccent(DrawContext ctx, int x, int y, int h) {
+        Matrix4f matrix = ctx.getMatrices().peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+        Tessellator tess = Tessellator.getInstance();
+        BufferBuilder buf = tess.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+
+        // Parlak kırmızı → soluk — glow efekti
+        buf.vertex(matrix, x,     y,     0).color(1f, 0.1f, 0.1f, 1.0f);
+        buf.vertex(matrix, x,     y + h, 0).color(1f, 0.1f, 0.1f, 1.0f);
+        buf.vertex(matrix, x + 2, y + h, 0).color(1f, 0.1f, 0.1f, 0.3f);
+        buf.vertex(matrix, x + 2, y,     0).color(1f, 0.1f, 0.1f, 0.3f);
+
+        BufferRenderer.drawWithGlobalProgram(buf.end());
+        RenderSystem.disableBlend();
+    }
+
+    // ── Smooth yuvarlak tuş (köşe simulasyonu) ─────────────────────────────
+    private static void drawSmoothKey(DrawContext ctx, int x, int y,
+                                       int w, int h, boolean pressed) {
+        Matrix4f matrix = ctx.getMatrices().peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+
+        float r = pressed ? 1f : 0.15f;
+        float g = pressed ? 0.1f : 0.15f;
+        float b = pressed ? 0.1f : 0.15f;
+        float a = pressed ? 0.85f : 0.65f;
+
+        Tessellator tess = Tessellator.getInstance();
+        BufferBuilder buf = tess.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+
+        // Ana gövde
+        buf.vertex(matrix, x,     y,     0).color(r, g, b, a);
+        buf.vertex(matrix, x,     y + h, 0).color(r * 0.6f, g, b, a);
+        buf.vertex(matrix, x + w, y + h, 0).color(r * 0.6f, g, b, a);
+        buf.vertex(matrix, x + w, y,     0).color(r, g, b, a);
+
+        BufferRenderer.drawWithGlobalProgram(buf.end());
+
+        // Pressed iken glow border
+        if (pressed) {
+            drawGlowBorder(ctx, x, y, w, h);
+        }
+
+        RenderSystem.disableBlend();
+    }
+
+    private static void drawGlowBorder(DrawContext ctx, int x, int y, int w, int h) {
+        Matrix4f matrix = ctx.getMatrices().peek().getPositionMatrix();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        Tessellator tess = Tessellator.getInstance();
+
+        // 4 kenar için ince parlak çizgi
+        float[][] edges = {
+            {x, y, x + w, y, x + w, y + 1, x, y + 1},           // üst
+            {x, y + h - 1, x + w, y + h - 1, x + w, y + h, x, y + h}, // alt
+            {x, y, x + 1, y, x + 1, y + h, x, y + h},           // sol
+            {x + w - 1, y, x + w, y, x + w, y + h, x + w - 1, y + h}  // sağ
+        };
+
+        for (float[] e : edges) {
+            BufferBuilder buf = tess.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+            buf.vertex(matrix, e[0], e[1], 0).color(1f, 0.3f, 0.3f, 0.9f);
+            buf.vertex(matrix, e[2], e[3], 0).color(1f, 0.3f, 0.3f, 0.9f);
+            buf.vertex(matrix, e[4], e[5], 0).color(1f, 0.3f, 0.3f, 0.9f);
+            buf.vertex(matrix, e[6], e[7], 0).color(1f, 0.3f, 0.3f, 0.9f);
+            BufferRenderer.drawWithGlobalProgram(buf.end());
+        }
+    }
+
+    // ── WATERMARK ───────────────────────────────────────────────────────────
     private static void renderWatermark(DrawContext ctx, MinecraftClient mc) {
         String text = SilveraConfig.watermark;
         int x = 4, y = 4;
-        int w = mc.textRenderer.getWidth(text) + 10;
-        ctx.fill(x - 2, y - 2, x + w, y + 12, 0xAA000000);
-        ctx.fill(x - 2, y - 2, x - 1, y + 12, 0xFFFF2020);
-        ctx.drawText(mc.textRenderer, "§c" + text, x + 3, y + 2, 0xFFFFFF, true);
+        int w = mc.textRenderer.getWidth(text) + 14;
+        int h = 14;
+
+        drawGradientPanel(ctx, x, y, w, h);
+        drawRedAccent(ctx, x, y, h);
+        ctx.drawText(mc.textRenderer, "§c" + text, x + 5, y + 3, 0xFFFFFF, true);
     }
 
+    // ── ARRAYLIST ───────────────────────────────────────────────────────────
     private static void renderArrayList(DrawContext ctx, MinecraftClient mc) {
         if (!SilveraConfig.arrayListEnabled) return;
         String[] modules = {"TrailFX", "HitFX", "Keystrokes", "CPS", "FPS"};
         int screenW = mc.getWindow().getScaledWidth();
         int y = 4;
+
         for (String mod : modules) {
             int textW = mc.textRenderer.getWidth(mod);
-            int x = screenW - textW - 6;
-            ctx.fill(x - 2, y - 1, screenW - 2, y + 9, 0xAA000000);
-            ctx.fill(screenW - 3, y - 1, screenW - 2, y + 9, 0xFFFF2020);
-            ctx.drawText(mc.textRenderer, "§c" + mod, x, y + 1, 0xFFFFFF, true);
-            y += 12;
+            int x = screenW - textW - 10;
+            int w = textW + 8;
+
+            drawGradientPanel(ctx, x, y, w, 12);
+            // Sağ kırmızı aksan
+            Matrix4f matrix = ctx.getMatrices().peek().getPositionMatrix();
+            RenderSystem.enableBlend();
+            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+            Tessellator tess = Tessellator.getInstance();
+            BufferBuilder buf = tess.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+            buf.vertex(matrix, x + w - 2, y,      0).color(1f, 0.1f, 0.1f, 0.3f);
+            buf.vertex(matrix, x + w - 2, y + 12, 0).color(1f, 0.1f, 0.1f, 0.3f);
+            buf.vertex(matrix, x + w,     y + 12, 0).color(1f, 0.1f, 0.1f, 1.0f);
+            buf.vertex(matrix, x + w,     y,      0).color(1f, 0.1f, 0.1f, 1.0f);
+            BufferRenderer.drawWithGlobalProgram(buf.end());
+            RenderSystem.disableBlend();
+
+            ctx.drawText(mc.textRenderer, "§c" + mod, x + 3, y + 2, 0xFFFFFF, true);
+            y += 13;
         }
     }
 
+    // ── KEYSTROKES ──────────────────────────────────────────────────────────
     private static void renderKeystrokes(DrawContext ctx, MinecraftClient mc) {
         if (!SilveraConfig.keystrokesEnabled) return;
         ClientPlayerEntity p = mc.player;
@@ -82,8 +198,8 @@ public class HudRenderer {
 
         int screenW = mc.getWindow().getScaledWidth();
         int screenH = mc.getWindow().getScaledHeight();
-        int baseX = screenW - 58;
-        int baseY = screenH - 68;
+        int baseX = screenW - 60;
+        int baseY = screenH - 72;
 
         boolean w     = mc.options.forwardKey.isPressed();
         boolean s     = mc.options.backKey.isPressed();
@@ -93,62 +209,86 @@ public class HudRenderer {
         boolean lmb   = mc.options.attackKey.isPressed();
         boolean rmb   = mc.options.useKey.isPressed();
 
-        drawKey(ctx, mc, "W",   baseX + 18, baseY,      w);
-        drawKey(ctx, mc, "A",   baseX,      baseY + 14, a);
-        drawKey(ctx, mc, "S",   baseX + 18, baseY + 14, s);
-        drawKey(ctx, mc, "D",   baseX + 36, baseY + 14, d);
-        drawWideKey(ctx, mc, "___", baseX, baseY + 28, space);
-        drawKey(ctx, mc, "LMB", baseX,      baseY + 42, lmb);
-        drawKey(ctx, mc, "RMB", baseX + 28, baseY + 42, rmb);
+        drawSmoothKey(ctx, baseX + 19, baseY,      14, 12, w);
+        drawSmoothKey(ctx, baseX,      baseY + 14, 14, 12, a);
+        drawSmoothKey(ctx, baseX + 19, baseY + 14, 14, 12, s);
+        drawSmoothKey(ctx, baseX + 38, baseY + 14, 14, 12, d);
+        drawSmoothKey(ctx, baseX,      baseY + 28, 52, 10, space);
+        drawSmoothKey(ctx, baseX,      baseY + 40, 24, 12, lmb);
+        drawSmoothKey(ctx, baseX + 28, baseY + 40, 24, 12, rmb);
 
-        if (SilveraConfig.cpsEnabled) {
+        // Tuş etiketleri
+        drawKeyLabel(ctx, mc, "W",   baseX + 19, baseY,      14, 12, w);
+        drawKeyLabel(ctx, mc, "A",   baseX,      baseY + 14, 14, 12, a);
+        drawKeyLabel(ctx, mc, "S",   baseX + 19, baseY + 14, 14, 12, s);
+        drawKeyLabel(ctx, mc, "D",   baseX + 38, baseY + 14, 14, 12, d);
+        drawKeyLabel(ctx, mc, "▬",   baseX,      baseY + 28, 52, 10, space);
+        drawKeyLabel(ctx, mc, "LMB", baseX,      baseY + 40, 24, 12, lmb);
+        drawKeyLabel(ctx, mc, "RMB", baseX + 28, baseY + 40, 24, 12, rmb);
+
+        if (SilveraConfig.cpsEnabled)
             ctx.drawText(mc.textRenderer,
-                "§7CPS: §c" + cps, baseX, baseY + 56, 0xFFFFFF, true);
-        }
+                "§7" + cps + " §cCPS", baseX + 4, baseY + 55, 0xFFFFFF, true);
     }
 
-    private static void drawKey(DrawContext ctx, MinecraftClient mc,
-                                 String label, int x, int y, boolean pressed) {
-        int bg     = pressed ? 0xCCFF2020 : 0xAA000000;
-        int border = pressed ? 0xFFFF5555 : 0xFF444444;
-        int text   = pressed ? 0xFFFFFFFF : 0xFFAAAAAA;
-        ctx.fill(x - 1, y - 1, x + 15, y + 11, border);
-        ctx.fill(x,     y,     x + 14, y + 10, bg);
+    private static void drawKeyLabel(DrawContext ctx, MinecraftClient mc,
+                                      String label, int x, int y,
+                                      int w, int h, boolean pressed) {
+        int color = pressed ? 0xFFFFFFFF : 0xFF888888;
         int tw = mc.textRenderer.getWidth(label);
-        ctx.drawText(mc.textRenderer, label, x + (14 - tw) / 2, y + 1, text, false);
+        ctx.drawText(mc.textRenderer, label, x + (w - tw) / 2, y + (h - 7) / 2, color, false);
     }
 
-    private static void drawWideKey(DrawContext ctx, MinecraftClient mc,
-                                     String label, int x, int y, boolean pressed) {
-        int bg     = pressed ? 0xCCFF2020 : 0xAA000000;
-        int border = pressed ? 0xFFFF5555 : 0xFF444444;
-        int text   = pressed ? 0xFFFFFFFF : 0xFFAAAAAA;
-        ctx.fill(x - 1, y - 1, x + 51, y + 11, border);
-        ctx.fill(x,     y,     x + 50, y + 10, bg);
-        int tw = mc.textRenderer.getWidth(label);
-        ctx.drawText(mc.textRenderer, label, x + (50 - tw) / 2, y + 1, text, false);
-    }
-
+    // ── STATS BAR ───────────────────────────────────────────────────────────
     private static void renderStatsBar(DrawContext ctx, MinecraftClient mc) {
         ClientPlayerEntity p = mc.player;
         if (p == null) return;
         int screenH = mc.getWindow().getScaledHeight();
-        int x = 4, y = screenH - 24;
+        int x = 4, y = screenH - 26;
 
         int hp    = (int) p.getHealth();
         int maxHp = (int) p.getMaxHealth();
         int fps   = mc.getCurrentFps();
 
-        ctx.fill(x - 2, y - 2, x + 100, y + 18, 0xAA000000);
-        ctx.fill(x - 2, y - 2, x - 1,  y + 18, 0xFFFF2020);
-        ctx.drawText(mc.textRenderer, "§c❤ " + hp + "/" + maxHp, x + 2, y + 2,  0xFFFFFF, true);
-        if (SilveraConfig.fpsEnabled)
-            ctx.drawText(mc.textRenderer, "§7FPS: §a" + fps,     x + 2, y + 11, 0xFFFFFF, true);
+        drawGradientPanel(ctx, x, y, 102, 22);
+        drawRedAccent(ctx, x, y, 22);
 
-        // HP bar
+        ctx.drawText(mc.textRenderer, "§c❤ §f" + hp + "§7/" + maxHp, x + 5, y + 3,  0xFFFFFF, true);
+        if (SilveraConfig.fpsEnabled)
+            ctx.drawText(mc.textRenderer, "§7FPS §a" + fps, x + 5, y + 12, 0xFFFFFF, true);
+
+        // Smooth HP bar
         float ratio = maxHp > 0 ? (float) hp / maxHp : 0;
-        ctx.fill(x + 2, y + 20, x + 98,                    y + 23, 0xFF333333);
-        ctx.fill(x + 2, y + 20, x + 2 + (int)(96 * ratio), y + 23,
-            ratio > 0.6f ? 0xFF44FF44 : ratio > 0.3f ? 0xFFFFAA00 : 0xFFFF2020);
+        int barY = y + 22;
+        drawHealthBar(ctx, x, barY, 102, ratio);
     }
-}
+
+    private static void drawHealthBar(DrawContext ctx, int x, int y, int w, float ratio) {
+        Matrix4f matrix = ctx.getMatrices().peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        Tessellator tess = Tessellator.getInstance();
+
+        // Arka plan
+        BufferBuilder bg = tess.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        bg.vertex(matrix, x,     y,     0).color(0.1f, 0.1f, 0.1f, 0.7f);
+        bg.vertex(matrix, x,     y + 3, 0).color(0.1f, 0.1f, 0.1f, 0.7f);
+        bg.vertex(matrix, x + w, y + 3, 0).color(0.1f, 0.1f, 0.1f, 0.7f);
+        bg.vertex(matrix, x + w, y,     0).color(0.1f, 0.1f, 0.1f, 0.7f);
+        BufferRenderer.drawWithGlobalProgram(bg.end());
+
+        // Dolgu gradient
+        float fw = w * ratio;
+        float r1 = ratio > 0.6f ? 0.1f : ratio > 0.3f ? 0.9f : 1.0f;
+        float g1 = ratio > 0.6f ? 0.9f : ratio > 0.3f ? 0.6f : 0.1f;
+
+        BufferBuilder fill = tess.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+        fill.vertex(matrix, x,      y,     0).color(r1, g1, 0.1f, 0.9f);
+        fill.vertex(matrix, x,      y + 3, 0).color(r1 * 0.7f, g1 * 0.7f, 0.1f, 0.9f);
+        fill.vertex(matrix, x + fw, y + 3, 0).color(r1 * 0.7f, g1 * 0.7f, 0.1f, 0.9f);
+        fill.vertex(matrix, x + fw, y,     0).color(r1, g1, 0.1f, 0.9f);
+        BufferRenderer.drawWithGlobalProgram(fill.end());
+
+        RenderSystem.disableBlend();
+    }
+                       }
