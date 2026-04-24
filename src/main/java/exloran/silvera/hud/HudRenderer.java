@@ -1,17 +1,15 @@
 package com.silvera.client.hud;
 
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gui.DrawContext;
 
 public class HudRenderer {
 
     public static void register() {
 
-        ParticleHud.init();
-
-        HudRenderCallback.EVENT.register((matrices, tickDelta) -> {
+        HudRenderCallback.EVENT.register((DrawContext context, float tickDelta) -> {
             ParticleHud.tick();
-            ParticleHud.render(matrices);
+            ParticleHud.render(context);
         });
 
         System.out.println("HUD Registered");
