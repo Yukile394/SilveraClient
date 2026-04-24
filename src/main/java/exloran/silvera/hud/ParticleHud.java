@@ -1,17 +1,13 @@
 package com.silvera.client.hud;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gui.DrawContext;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ParticleHud {
 
     private static final List<Particle> particles = new ArrayList<>();
-
-    public static void init() {
-        System.out.println("Particle HUD Loaded");
-    }
 
     public static void tick() {
         particles.add(new Particle(Math.random() * 100, Math.random() * 100));
@@ -22,9 +18,9 @@ public class ParticleHud {
         }
     }
 
-    public static void render(MatrixStack matrices) {
+    public static void render(DrawContext context) {
         for (Particle p : particles) {
-            p.draw();
+            p.draw(context);
         }
     }
 
@@ -42,13 +38,14 @@ public class ParticleHud {
             life--;
         }
 
-        void draw() {
-            // Basit debug particle
-            MinecraftClient.getInstance().textRenderer.draw(
+        void draw(DrawContext context) {
+            context.drawText(
+                net.minecraft.client.MinecraftClient.getInstance().textRenderer,
                 "•",
-                (float)x,
-                (float)y,
-                0xFFFFFF
+                (int) x,
+                (int) y,
+                0xFFFFFF,
+                false
             );
         }
     }
