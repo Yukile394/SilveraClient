@@ -3,19 +3,18 @@ package com.silvera.client.hud;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class HudRenderer {
 
     public static void register() {
 
-        HudRenderCallback.EVENT.register((DrawContext context, float tickDelta) -> {
+        HudRenderCallback.EVENT.register((context, tickDelta) -> {
 
             MinecraftClient client = MinecraftClient.getInstance();
 
             if (client.player == null) return;
 
-            int fps = client.getCurrentFps(); // ✅ DOĞRU YER
+            int fps = client.getCurrentFps();
 
             context.drawText(
                     client.textRenderer,
