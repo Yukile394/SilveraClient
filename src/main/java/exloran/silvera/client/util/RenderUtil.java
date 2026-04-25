@@ -1,6 +1,6 @@
 package com.silvera.client.util;
 
-import net.minecraft.client.gui.DrawContext;
+import com.silvera.client.util.RenderUtil;
 
 public class RenderUtil {
 
